@@ -1,0 +1,31 @@
+{
+  "compilerOptions": {
+    "allowJs": false,
+    "allowSyntheticDefaultImports": true,
+    "lib": ["esnext"],
+    "module": "ESNext",
+    "moduleResolution": "node",
+    "noImplicitAny": false,
+    "noUnusedLocals": true,
+    "noUnusedParameters": false,
+    "outDir": "./dist",
+    "target": "ESNext",
+    "skipLibCheck": true,
+    "strict": false,
+    "forceConsistentCasingInFileNames": true,
+    "esModuleInterop": true
+  },
+  "include": [
+    "src/**/*.ts",
+    "node_modules/microbundle/index.d.ts"
+  ],
+  "exclude": [
+    "test/*",
+    "jest.*.ts",
+    "**/*.test.ts",
+    "**/*.e2e-test.ts",
+    "node_modules",
+    "dist",
+    ".tmp"
+  ]
+}
