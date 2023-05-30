@@ -1,13 +1,17 @@
 import axios from "axios";
 import parseRange from "parse-numeric-range";
-import {load} from "cheerio";
+import { load } from "cheerio";
 import qs from "qs";
-import {Transformer} from "unified";
-import { visit, VisitorResult } from "unist-util-visit";
-import {classnames as cx} from "hast-util-classnames";
-import {isElement} from "hast-util-is-element";
-import {Root, Parent, Element, Text} from "hast";
-import {fromHtml} from "hast-util-from-html";
+import { visit } from "unist-util-visit";
+import { classnames as cx } from "hast-util-classnames";
+import { isElement } from "hast-util-is-element";
+import type {
+  Root,
+  Parent,
+  Element,
+  Text,
+} from "hast";
+import { fromHtml } from "hast-util-from-html";
 
 type GistProps = {
   username: string;
@@ -17,31 +21,38 @@ type GistProps = {
   highlights?: string;
 };
 
+type RehypeGistOptions = {
+  replaceParentParagraph?: boolean;
+  omitCodeBlocks?: boolean;
+  classNames?: string | string[];
+};
+
 const baseGistUrl = `https://gist.github.com`;
 
 function parseGistProtocolUri(gistUri: string): GistProps | undefined {
-  if (!gistUri.startsWith(`gist:`)) return;
+  if (!gistUri.startsWith(`gist:`)) return undefined;
 
   const uriSegments = gistUri.replace(`gist:`, ``).split(/[/?]/);
 
-  if (uriSegments.length === 2) return {
-    username: uriSegments[0],
-    gistId: uriSegments[1],
-  };
+  if (uriSegments.length === 2) {
+    return {
+      username: uriSegments[0],
+      gistId: uriSegments[1],
+    } as GistProps;
+  }
 
-  if (uriSegments.length !== 3) return;
+  if (uriSegments.length !== 3) return undefined;
 
   const [username, gistId, queryString] = uriSegments;
 
-  let gistQuery = qs.parse(queryString, { comma: false });
+  const gistQuery = qs.parse(queryString, { comma: false });
 
   return {
     username,
     gistId,
-    // TODO: Find a better way than casting to String.
-    file: String(gistQuery.file),
-    lines: String(gistQuery.lines),
-    highlights: String(gistQuery.highlights),
+    file: gistQuery.file.toString(),
+    lines: gistQuery.lines.toString(),
+    highlights: gistQuery.highlights.toString(),
   };
 }
 
@@ -52,7 +63,7 @@ async function getGistHtml(gistUri: string): Promise<string> {
 
   const gistUrl = `${baseGistUrl}/${source.username}/${source.gistId}.json${source.file ? `?file=${source.file}` : ``}`;
 
-  const {data} = await axios.get(gistUrl);
+  const { data } = await axios.get(gistUrl);
 
   const gistHtml = data.div;
   const highlights = source.highlights ? parseRange(source.highlights) : [];
@@ -85,67 +96,68 @@ async function getGistHtml(gistUri: string): Promise<string> {
   return $.html().trim();
 }
 
-type RemarkGistOptions = {
-  replaceParentParagraph?: boolean;
-  omitCodeBlocks?: boolean;
-  classNames?: string | string[];
-};
+async function convertInlineCodeToGist(
+  node: Element,
+  parent: Parent,
+  options: RehypeGistOptions,
+): Promise<void> {
+  if (options.omitCodeBlocks && isElement(parent, `pre`)) return;
+  if (isElement(parent, `p`) && parent.children.length > 1) return; // Can't replace p tag if it contains more that our target gist element
+
+  const gistUri = (node.children[0] as Text).value;
+
+  const gistHtml = await getGistHtml(gistUri);
+  const rootFragment: Root = fromHtml(gistHtml, { fragment: true });
+  const rootElements: Element[] = rootFragment.children
+    .filter((child) => isElement(child))
+    .map((child) => child as Element);
+
+  if (rootElements.length !== 1) throw new Error(`Gist doesn't exist or has no content`);
+
+  const newNode: Element = cx(rootElements[0] as Element, options.classNames);
+
+  if (options.replaceParentParagraph && isElement(parent) && isElement(parent, `p`)) {
+    Object.assign(parent, newNode);
+  } else {
+    Object.assign(node, newNode);
+  }
+}
+
+function isValidGist(node: Element): boolean {
+  return isElement(node, `code`)
+  && node.children.length === 1
+  && node.children[0].type === `text`
+  && node.children[0].value.startsWith(`gist:`);
+}
+
+function getGistTransformations(tree: Root, options: RehypeGistOptions): Promise<void>[] {
+  const transformations: Promise<void>[] = [];
+  visit(
+    tree,
+    isValidGist,
+    (node: Element, _, parent: Parent) => {
+      transformations.push(
+        convertInlineCodeToGist(node, parent, options),
+      );
+    },
+  );
+
+  return transformations;
+}
 
 export default function RemarkGist(
   {
     replaceParentParagraph = true,
     omitCodeBlocks = true,
     classNames,
-  }: RemarkGistOptions,
+  }: RehypeGistOptions,
 ) {
-  const transformer: Transformer<Root> = async (tree): Promise<Root> => {
-    const transformations: Promise<void>[] = [];
-    visit(
-      tree,
-      (node: Element) => {
-        return isElement(node, `code`)
-          && node.children.length === 1
-          && node.children[0].type === `text`
-          && node.children[0].value.startsWith(`gist:`);
-      },
-      (node: Element, _, parent: Parent): VisitorResult => {
-      if (omitCodeBlocks && isElement(parent, `pre`)) return;
-      if (isElement(parent, `p`) && parent.children.length > 1) return; // Can't replace p tag if it contains more that our target gist element
-
-      const gistUri = (node.children[0] as Text).value;
-
-      transformations.push(
-        new Promise<void>(async (resolve, reject) => {
-          try {
-            const gistHtml = await getGistHtml(gistUri);
-            const rootFragment: Root = fromHtml(gistHtml, { fragment: true });
-            const rootElements: Element[] = rootFragment.children
-              .filter((child) => isElement(child))
-              .map((child) => child as Element);
-
-            if (rootElements.length !== 1) reject(`Gist doesn't exist or has no content`);
-
-            const newNode: Element = cx(rootElements[0] as Element, classNames);
-
-            if (replaceParentParagraph && isElement(parent) && isElement(parent, `p`)) {
-              Object.assign(parent, newNode);
-            } else {
-              Object.assign(node, newNode);
-            }
-
-            resolve();
-          } catch (error) {
-            console.error(error);
-            reject(error);
-          }
-        }),
-      );
-    });
-
-    await Promise.all(transformations);
-
+  return async (tree: Root): Promise<Root> => {
+    await Promise.all(getGistTransformations(tree, {
+      replaceParentParagraph,
+      omitCodeBlocks,
+      classNames,
+    }));
     return tree;
-  }
-
-  return transformer;
+  };
 }

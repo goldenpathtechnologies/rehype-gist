@@ -1,6 +1,5 @@
-src/version.ts
 node_modules
 dist
-docs/public
-docs/external
-.cache
+docs/out
+#docs/external
+docs/.next
