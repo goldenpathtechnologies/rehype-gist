@@ -30,7 +30,12 @@
     "clean": "rimraf ./dist",
     "format": "eslint . --fix --ext ts --ext tsx",
     "lint": "eslint . --ext ts --ext tsx",
-    "type-check": "tsc --pretty --noEmit"
+    "type-check": "tsc --pretty --noEmit",
+    "build:docs": "npm --prefix ./docs/ run build",
+    "dev:docs": "npm --prefix ./docs/ run dev",
+    "start:docs": "npm --prefix ./docs/ run start",
+    "lint:docs": "npm --prefix ./docs/ run lint",
+    "serve:docs": "npm --prefix ./docs/ run serve"
   },
   "dependencies": {
     "axios": "^1.4.0",
@@ -46,10 +51,18 @@
   "devDependencies": {
     "@types/hast": "^2.3.4",
     "@types/jest": "^29.5.1",
+    "@types/qs": "^6.9.7",
     "jest": "^29.5.0",
     "microbundle": "^0.15.1",
     "ts-jest": "^29.1.0",
     "ts-node": "^10.9.1",
     "typescript": "^5.0.4"
+  },
+  "repository": {
+    "type": "git",
+    "url": "https://github.com/goldenpathtechnologies/rehype-gist.git"
+  },
+  "bugs": {
+    "url": "https://github.com/goldenpathtechnologies/rehype-gist/issues"
   }
 }
