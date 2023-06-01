@@ -22,17 +22,17 @@ async function convertInlineCodeToGist(
   options: RehypeGistOptions,
 ): Promise<void> {
   if (options.omitCodeBlocks && isElement(parent, `pre`)) return;
-  if (isElement(parent, `p`) && parent.children.length > 1) return; // Can't replace p tag if it contains more that our target gist element
+  // Can't replace p tag if it contains more than just our target gist element
+  if (options.replaceParentParagraph && isElement(parent, `p`) && parent.children.length > 1) return;
 
   const gistUri = (node.children[0] as Text).value;
-
   const gistHtml = await getGistHtml(gistUri);
   const rootFragment: Root = fromHtml(gistHtml, { fragment: true });
   const rootElements: Element[] = rootFragment.children
     .filter((child) => isElement(child))
     .map((child) => child as Element);
 
-  if (rootElements.length !== 1) throw new Error(`Gist doesn't exist or has no content`);
+  if (rootElements.length !== 1) throw new Error(`Gist doesn't exist or has invalid content`);
 
   const newNode: Element = cx(rootElements[0] as Element, options.classNames);
 

@@ -3,7 +3,7 @@ import axios from "axios";
 import parseRange from "parse-numeric-range";
 import { load } from "cheerio";
 
-type GistProps = {
+type GistUri = {
   username: string;
   gistId: string;
   file?: string;
@@ -11,9 +11,29 @@ type GistProps = {
   highlights?: string;
 };
 
+type Gist = {
+  description: string;
+  public: boolean;
+  created_at: string;
+  files: string[];
+  owner: string;
+  div: string;
+  stylesheet: string;
+};
+
+type GistHtmlResponse = {
+  data: Gist;
+  status: number;
+  statusText: string;
+};
+
+type GistHtmlContext = {
+  handleGistRequest: (gistUrl: string) => Promise<GistHtmlResponse>;
+};
+
 const baseGistUrl = `https://gist.github.com`;
 
-function parseGistProtocolUri(gistUri: string): GistProps | undefined {
+export function parseGistUri(gistUri: string): GistUri | undefined {
   if (!gistUri.startsWith(`gist:`)) return undefined;
 
   const uriSegments = gistUri.replace(`gist:`, ``).split(/[/?]/);
@@ -22,45 +42,36 @@ function parseGistProtocolUri(gistUri: string): GistProps | undefined {
     return {
       username: uriSegments[0],
       gistId: uriSegments[1],
-    } as GistProps;
+    } as GistUri;
   }
 
   if (uriSegments.length !== 3) return undefined;
 
   const [username, gistId, queryString] = uriSegments;
-
   const gistQuery = qs.parse(queryString, { comma: false });
 
   return {
     username,
     gistId,
-    file: gistQuery.file.toString(),
-    lines: gistQuery.lines.toString(),
-    highlights: gistQuery.highlights.toString(),
+    file: gistQuery.file?.toString(),
+    lines: gistQuery.lines?.toString(),
+    highlights: gistQuery.highlights?.toString(),
   };
 }
 
-export default async function getGistHtml(gistUri: string): Promise<string> {
-  const source = parseGistProtocolUri(gistUri);
-
-  if (!source) return `<div class="bg-tertiary rounded-lg p-4 text-sm">Failed to load Gist: incorrect URI format</div>`;
-
-  const gistUrl = `${baseGistUrl}/${source.username}/${source.gistId}.json${source.file ? `?file=${source.file}` : ``}`;
-
-  const { data } = await axios.get(gistUrl);
-
+export function processGistHtml(uri: GistUri, data: Gist): string {
   const gistHtml = data.div;
-  const highlights = source.highlights ? parseRange(source.highlights) : [];
-  const lines = source.lines ? parseRange(source.lines) : [];
+  const highlights = uri.highlights ? parseRange(uri.highlights) : [];
+  const lines = uri.lines ? parseRange(uri.lines) : [];
   const hasHighlights = highlights.length > 0;
   const hasLines = lines.length > 0;
-  const canProcessLinesAndHighlights = (hasLines || hasHighlights) && source.file;
+  const canProcessLinesOrHighlights = (hasLines || hasHighlights) && uri.file;
 
-  if (!canProcessLinesAndHighlights) return gistHtml;
+  if (!canProcessLinesOrHighlights) return gistHtml;
 
   // handle line removal and highlights
   const $ = load(gistHtml, null, false);
-  const file = source.file?.replace(/^\./, ``)
+  const file = uri.file?.replace(/^\./, ``)
     .replace(/[^a-zA-Z0-9_]+/g, `-`)
     .toLowerCase();
 
@@ -78,4 +89,24 @@ export default async function getGistHtml(gistUri: string): Promise<string> {
   });
 
   return $.html().trim();
+}
+
+export default async function getGistHtml(
+  gistUri: string,
+  context: GistHtmlContext = {
+    handleGistRequest: (gistUrl: string) => axios.get(gistUrl),
+  },
+): Promise<string> {
+  const uri = parseGistUri(gistUri);
+
+  if (!uri) throw new Error(`Failed to load Gist, incorrect URI format`);
+
+  const gistUrl = `${baseGistUrl}/${uri.username}/${uri.gistId}.json${uri.file ? `?file=${uri.file}` : ``}`;
+  const response = await context.handleGistRequest(gistUrl);
+
+  if (response.status === 400) throw new Error(`Gist not found at URL: ${gistUrl}`);
+  if (response.status === 500) throw new Error(`An error occurred while requesting Gist from the server`);
+  if (response.status !== 200) throw new Error(`Response not supported: ${response.status} - ${response.statusText}`);
+
+  return processGistHtml(uri, response.data);
 }
