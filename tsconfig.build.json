@@ -20,7 +20,7 @@
     "node_modules/microbundle/index.d.ts"
   ],
   "exclude": [
-    "test/*",
+    "test/**/*",
     "jest.*.ts",
     "**/*.test.ts",
     "**/*.e2e-test.ts",

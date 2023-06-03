@@ -10,13 +10,13 @@ import type {
 import { fromHtml } from "hast-util-from-html";
 import getGistHtml from "./util";
 
-type RehypeGistOptions = {
+export type RehypeGistOptions = {
   replaceParentParagraph?: boolean;
   omitCodeBlocks?: boolean;
   classNames?: string | string[];
 };
 
-async function convertInlineCodeToGist(
+export async function convertInlineCodeToGist(
   node: Element,
   parent: Parent,
   options: RehypeGistOptions,
@@ -43,14 +43,14 @@ async function convertInlineCodeToGist(
   }
 }
 
-function isValidGist(node: Element): boolean {
+export function isValidGist(node: Element): boolean {
   return isElement(node, `code`)
   && node.children.length === 1
   && node.children[0].type === `text`
   && node.children[0].value.startsWith(`gist:`);
 }
 
-function getGistTransformations(tree: Root, options: RehypeGistOptions): Promise<void>[] {
+export function getGistTransformations(tree: Root, options: RehypeGistOptions): Promise<void>[] {
   const transformations: Promise<void>[] = [];
   visit(
     tree,

@@ -3,7 +3,7 @@ import axios from "axios";
 import parseRange from "parse-numeric-range";
 import { load } from "cheerio";
 
-type GistUri = {
+export type GistUri = {
   username: string;
   gistId: string;
   file?: string;
@@ -11,7 +11,7 @@ type GistUri = {
   highlights?: string;
 };
 
-type Gist = {
+export type Gist = {
   description: string;
   public: boolean;
   created_at: string;
@@ -19,16 +19,6 @@ type Gist = {
   owner: string;
   div: string;
   stylesheet: string;
-};
-
-type GistHtmlResponse = {
-  data: Gist;
-  status: number;
-  statusText: string;
-};
-
-type GistHtmlContext = {
-  handleGistRequest: (gistUrl: string) => Promise<GistHtmlResponse>;
 };
 
 const baseGistUrl = `https://gist.github.com`;
@@ -59,6 +49,12 @@ export function parseGistUri(gistUri: string): GistUri | undefined {
   };
 }
 
+export function convertFilenameToAttributeFormat(filename: string): string {
+  return filename.replace(/^\./, ``)
+    .replace(/[^a-zA-Z0-9_]+/g, `-`)
+    .toLowerCase();
+}
+
 export function processGistHtml(uri: GistUri, data: Gist): string {
   const gistHtml = data.div;
   const highlights = uri.highlights ? parseRange(uri.highlights) : [];
@@ -71,9 +67,7 @@ export function processGistHtml(uri: GistUri, data: Gist): string {
 
   // handle line removal and highlights
   const $ = load(gistHtml, null, false);
-  const file = uri.file?.replace(/^\./, ``)
-    .replace(/[^a-zA-Z0-9_]+/g, `-`)
-    .toLowerCase();
+  const file = convertFilenameToAttributeFormat(uri.file);
 
   // highlight the specific lines, if any
   highlights.forEach((line) => {
@@ -91,18 +85,13 @@ export function processGistHtml(uri: GistUri, data: Gist): string {
   return $.html().trim();
 }
 
-export default async function getGistHtml(
-  gistUri: string,
-  context: GistHtmlContext = {
-    handleGistRequest: (gistUrl: string) => axios.get(gistUrl),
-  },
-): Promise<string> {
+export default async function getGistHtml(gistUri: string): Promise<string> {
   const uri = parseGistUri(gistUri);
 
   if (!uri) throw new Error(`Failed to load Gist, incorrect URI format`);
 
   const gistUrl = `${baseGistUrl}/${uri.username}/${uri.gistId}.json${uri.file ? `?file=${uri.file}` : ``}`;
-  const response = await context.handleGistRequest(gistUrl);
+  const response = await axios.get(gistUrl);
 
   if (response.status === 400) throw new Error(`Gist not found at URL: ${gistUrl}`);
   if (response.status === 500) throw new Error(`An error occurred while requesting Gist from the server`);

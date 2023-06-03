@@ -22,6 +22,7 @@
     "src/**/*.ts",
     "test/**/*.test.ts",
     "test/**/*.e2e-test.ts",
+    "test/data/*.ts",
     "jest.config.ts"
   ],
   "exclude": [
