@@ -3,7 +3,7 @@ import {
   convertFilenameToAttributeFormat,
   GistUri,
   parseGistUri,
-  processGistHtml,
+  getGistElementFromHtml,
 } from "../src/util";
 import { singleFileGist } from "./data";
 
@@ -115,10 +115,10 @@ describe(`convertFilenameToAttributeFormat`, () => {
   });
 });
 
-describe(`processGistHtml`, () => {
+describe(`getGistElementFromHtml`, () => {
   it(`Returns the Gist HTML unmodified with only username and gistId provided`, () => {
     const { uri, gist } = singleFileGist;
-    const result = processGistHtml(uri, gist);
+    const result = getGistElementFromHtml(uri, gist);
 
     expect(result).toBe(gist.div);
   });
@@ -129,7 +129,7 @@ describe(`processGistHtml`, () => {
       lines: `1`,
       highlights: `2`,
     };
-    const result = processGistHtml(uri, singleFileGist.gist);
+    const result = getGistElementFromHtml(uri, singleFileGist.gist);
 
     expect(result).toBe(singleFileGist.gist.div);
   });
@@ -139,7 +139,7 @@ describe(`processGistHtml`, () => {
       ...singleFileGist.uri,
       file: singleFileGist.gist.files[0],
     };
-    const result = processGistHtml(uri, singleFileGist.gist);
+    const result = getGistElementFromHtml(uri, singleFileGist.gist);
 
     expect(result).toBe(singleFileGist.gist.div);
   });
@@ -153,7 +153,7 @@ describe(`processGistHtml`, () => {
   });
 });
 
-describe(`getGistHtml`, () => {
+describe(`getGistElement`, () => {
   it(`Throws an error when Gist URI has incorrect format`, () => {
 
   });
@@ -167,6 +167,50 @@ describe(`getGistHtml`, () => {
   });
 
   it(`Throws an error if the Gist request status is unsupported`, () => {
+
+  });
+});
+
+describe(`convertInlineCodeToGist`, () => {
+  it(`Does not transform elements that are not 'code' tags`, () => {
+
+  });
+
+  it(`Does not transform 'code' tags that have 'pre' as direct parent`, () => {
+
+  });
+
+  it(`Does not replace parent 'p' tag if the 'code' tag has sibling elements`, () => {
+
+  });
+
+  it(`Throws an error if root Gist 'div' element has siblings`, () => {
+
+  });
+
+  it(`Replaces parent 'p' tag when transforming`, () => {
+
+  });
+
+  it(`Transforms 'code' element to Gist`, () => {
+
+  });
+});
+
+describe(`isValidGist`, () => {
+  it(`Is valid if element is a 'code' tag`, () => {
+
+  });
+
+  it(`Is valid if element has a single child`, () => {
+
+  });
+
+  it(`Is valid if child of element is of type 'text'`, () => {
+
+  });
+
+  it(`Is valid if element text begins with 'gist:' protocol`, () => {
 
   });
 });

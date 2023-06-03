@@ -1,7 +1,16 @@
 import qs from "qs";
 import axios from "axios";
 import parseRange from "parse-numeric-range";
-import { load } from "cheerio";
+import { fromHtml } from "hast-util-from-html";
+import type {
+  Element,
+  Parent,
+  Root,
+  Text,
+} from "hast";
+import { isElement } from "hast-util-is-element";
+import { visit } from "unist-util-visit";
+import { classnames as cx } from "hast-util-classnames";
 
 export type GistUri = {
   username: string;
@@ -19,6 +28,12 @@ export type Gist = {
   owner: string;
   div: string;
   stylesheet: string;
+};
+
+export type RehypeGistOptions = {
+  replaceParentParagraph?: boolean;
+  omitCodeBlocks?: boolean;
+  classNames?: string | string[];
 };
 
 const baseGistUrl = `https://gist.github.com`;
@@ -55,37 +70,67 @@ export function convertFilenameToAttributeFormat(filename: string): string {
     .toLowerCase();
 }
 
-export function processGistHtml(uri: GistUri, data: Gist): string {
+export function getGistElementFromHtml(uri: GistUri, data: Gist): Element {
   const gistHtml = data.div;
   const highlights = uri.highlights ? parseRange(uri.highlights) : [];
   const lines = uri.lines ? parseRange(uri.lines) : [];
   const hasHighlights = highlights.length > 0;
   const hasLines = lines.length > 0;
   const canProcessLinesOrHighlights = (hasLines || hasHighlights) && uri.file;
+  const rootFragment: Root = fromHtml(gistHtml, { fragment: true });
+  const rootElements: Element[] = rootFragment.children
+    .filter((child) => isElement(child))
+    .map((child) => child as Element);
 
-  if (!canProcessLinesOrHighlights) return gistHtml;
+  if (rootElements.length !== 1) throw new Error(`Gist doesn't exist or has invalid content`);
 
-  // handle line removal and highlights
-  const $ = load(gistHtml, null, false);
+  const gistElement = rootElements[0];
+
+  if (!canProcessLinesOrHighlights) return gistElement;
+
   const file = convertFilenameToAttributeFormat(uri.file);
+  const elementIdPrefix = `file-${file}-LC`;
 
-  // highlight the specific lines, if any
-  highlights.forEach((line) => {
-    $(`#file-${file}-LC${line}`).addClass(`highlighted`);
-  });
+  visit(
+    gistElement,
+    (node: Element) => {
+      if (!isElement(node, `tr`)) return false;
 
-  // remove the specific lines, if any
-  const codeLines = parseRange(`1-${$(`table tr`).length}`);
-  codeLines.forEach((line) => {
-    if (lines.includes(line)) return;
+      const codeLine = node.children.find(
+        (e: Element) => e.tagName === `td` && String(e.properties.id).includes(elementIdPrefix),
+      );
 
-    $(`#file-${file}-LC${line}`).parent().remove();
-  });
+      return codeLine !== undefined;
+    },
+    (node: Element, index: number, parent: Parent) => {
+      const codeLine = node.children.find(
+        (e: Element) => String(e.properties.id).includes(elementIdPrefix),
+      );
 
-  return $.html().trim();
+      if (codeLine === undefined) return;
+
+      const lineNumber = parseInt(
+        String((codeLine as Element).properties.id).replace(elementIdPrefix, ``),
+        10,
+      );
+
+      if (Number.isNaN(lineNumber)) return;
+
+      if (highlights.includes(lineNumber)) {
+        Object.assign(codeLine, cx(codeLine, `highlighted`));
+      }
+
+      if (lines.includes(lineNumber)) {
+        parent.children.splice(index, 1);
+      }
+    },
+    true,
+  );
+
+  return gistElement;
 }
 
-export default async function getGistHtml(gistUri: string): Promise<string> {
+export default async function getGistElement(gistUri: string): Promise<Element> {
   const uri = parseGistUri(gistUri);
 
   if (!uri) throw new Error(`Failed to load Gist, incorrect URI format`);
@@ -97,5 +142,47 @@ export default async function getGistHtml(gistUri: string): Promise<string> {
   if (response.status === 500) throw new Error(`An error occurred while requesting Gist from the server`);
   if (response.status !== 200) throw new Error(`Response not supported: ${response.status} - ${response.statusText}`);
 
-  return processGistHtml(uri, response.data);
+  return getGistElementFromHtml(uri, response.data);
+}
+
+export async function convertInlineCodeToGist(
+  node: Element,
+  parent: Parent,
+  options: RehypeGistOptions,
+): Promise<void> {
+  if (options.omitCodeBlocks && isElement(parent, `pre`)) return;
+  // Can't replace p tag if it contains more than just our target gist element
+  if (options.replaceParentParagraph && isElement(parent, `p`) && parent.children.length > 1) return;
+
+  const gistUri = (node.children[0] as Text).value;
+  const gistElement = await getGistElement(gistUri);
+  const newNode: Element = cx(gistElement, options.classNames);
+
+  if (options.replaceParentParagraph && isElement(parent) && isElement(parent, `p`)) {
+    Object.assign(parent, newNode);
+  } else {
+    Object.assign(node, newNode);
+  }
+}
+
+export function isValidGist(node: Element): boolean {
+  return isElement(node, `code`)
+    && node.children.length === 1
+    && node.children[0].type === `text`
+    && node.children[0].value.startsWith(`gist:`);
+}
+
+export function getGistTransformations(tree: Root, options: RehypeGistOptions): Promise<void>[] {
+  const transformations: Promise<void>[] = [];
+  visit(
+    tree,
+    isValidGist,
+    (node: Element, _, parent: Parent) => {
+      transformations.push(
+        convertInlineCodeToGist(node, parent, options),
+      );
+    },
+  );
+
+  return transformations;
 }
