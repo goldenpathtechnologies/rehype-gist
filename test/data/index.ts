@@ -1,4 +1,4 @@
-import {Gist, GistUri} from "../../src/util";
+import { Gist, GistUri } from "../../src/util.js";
 
 type ProcessGistHtmlParams = {
   uri: GistUri,
@@ -8,6 +8,9 @@ export const singleFileGist: ProcessGistHtmlParams = {
   uri: {
     username: `darylwright`,
     gistId: `75332f27a6e9bff70bc0406114570829`,
+    file: `gist-test.ts`,
+    lines: [],
+    highlights: [],
   },
   gist: {
     div: `<div id="gist122750024" class="gist">

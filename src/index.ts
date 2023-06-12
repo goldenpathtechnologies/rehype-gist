@@ -1,5 +1,5 @@
 import type { Root } from "hast";
-import { getGistTransformations, RehypeGistOptions } from "./util";
+import { getGistTransformations, RehypeGistOptions } from "./util.js";
 
 export default function RehypeGist(
   {
