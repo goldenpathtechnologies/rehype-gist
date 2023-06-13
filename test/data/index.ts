@@ -4,6 +4,8 @@ type ProcessGistHtmlParams = {
   uri: GistUri,
   gist: Gist,
 };
+
+// eslint-disable-next-line import/prefer-default-export
 export const singleFileGist: ProcessGistHtmlParams = {
   uri: {
     username: `darylwright`,

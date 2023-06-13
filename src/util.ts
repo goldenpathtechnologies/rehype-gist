@@ -41,7 +41,7 @@ const gistProtocol = `gist:`;
 
 export function parseGistUri(gistUri: string): GistUri | undefined {
   if (!gistUri.startsWith(gistProtocol)) return undefined;
-  
+
   const uriQuery = gistUri.replace(gistProtocol, ``).split(`?`);
 
   if (uriQuery.length > 2) return undefined;
@@ -61,7 +61,6 @@ export function parseGistUri(gistUri: string): GistUri | undefined {
 
   if (uriSegments.length !== 2) return undefined;
 
-  // const [username, gistId, queryString] = uriSegments;
   const [username, gistId] = uriSegments;
   const gistQuery = qs.parse(queryString, { comma: false });
   const highlightsQuery = gistQuery.highlights?.toString();

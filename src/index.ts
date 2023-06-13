@@ -3,10 +3,13 @@ import { getGistTransformations, RehypeGistOptions } from "./util.js";
 
 export default function RehypeGist(
   {
-    replaceParentParagraph = true,
-    omitCodeBlocks = true,
+    replaceParentParagraph,
+    omitCodeBlocks,
     classNames,
-  }: RehypeGistOptions,
+  }: RehypeGistOptions = {
+    replaceParentParagraph: true,
+    omitCodeBlocks: true,
+  },
 ) {
   return async (tree: Root): Promise<Root> => {
     await Promise.all(getGistTransformations(tree, {
