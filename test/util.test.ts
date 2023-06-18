@@ -10,7 +10,7 @@ import getGistElement, {
   getGistVisitorPredicate,
   getGistTreeFromHtml,
   getGistVisitor,
-  getCodeLineIdPrefix, RehypeGistOptions, convertInlineCodeToGist, isValidGist,
+  getCodeLineIdPrefix, RehypeGistOptions, convertInlineCodeToGist, isValidGist, elementHasOneValidChild,
 } from "../src/util.js";
 import { singleFileGist } from "./data/index.js";
 
@@ -374,6 +374,92 @@ describe(`getGistElement`, () => {
       statusText,
     });
     await expect(getGistElement(`gist:x/y`)).rejects.toThrow(`Response not supported: ${expected}`);
+  });
+});
+
+describe(`elementHasOneValidChild`, () => {
+  it(`Returns false when element contains more than one child element`, () => {
+    const node: Element = {
+      type: `element`,
+      tagName: `div`,
+      children: [
+        {
+          type: `element`,
+          tagName: `span`,
+          children: [],
+        },
+        {
+          type: `element`,
+          tagName: `span`,
+          children: [],
+        },
+      ],
+    };
+
+    const result = elementHasOneValidChild(node);
+
+    expect(result).toBeFalsy();
+  });
+
+  it(`Returns false when element contains only whitespace`, () => {
+    const node: Element = {
+      type: `element`,
+      tagName: `div`,
+      children: [
+        {
+          type: `text`,
+          value: `\n\t \r\n \r`,
+        },
+      ],
+    };
+
+    const result = elementHasOneValidChild(node);
+
+    expect(result).toBeFalsy();
+  });
+
+  it(`Returns true when element contains one child element`, () => {
+    const node: Element = {
+      type: `element`,
+      tagName: `div`,
+      children: [
+        {
+          type: `element`,
+          tagName: `span`,
+          children: [],
+        },
+      ],
+    };
+
+    const result = elementHasOneValidChild(node);
+
+    expect(result).toBeTruthy();
+  });
+
+  it(`Returns true when element contains one child element and at least one instance of whitespace`, () => {
+    const node: Element = {
+      type: `element`,
+      tagName: `div`,
+      children: [
+        {
+          type: `text`,
+          value: `    \n`,
+        },
+        {
+          type: `element`,
+          tagName: `span`,
+          children: [],
+        },
+        {
+          type: `text`,
+          value: `    \n`,
+        },
+      ],
+    };
+
+    const result = elementHasOneValidChild(node);
+
+    expect(result).toBeTruthy();
   });
 });
 

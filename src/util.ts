@@ -178,6 +178,19 @@ export function isValidGist(node: Element): boolean {
     && node.children[0].value.startsWith(gistProtocol);
 }
 
+export function elementHasOneValidChild(node: Element): boolean {
+  let elementCount = 0;
+
+  node.children.forEach((child) => {
+    if (isElement(child)
+      || (child.type === `text`
+        && (child as Text).value.search(/^\s+$/) === -1)
+    ) elementCount += 1;
+  });
+
+  return elementCount === 1;
+}
+
 export async function convertInlineCodeToGist(
   node: Element,
   parent: Parent,
@@ -186,7 +199,9 @@ export async function convertInlineCodeToGist(
   if (!isValidGist(node)) return;
   if (options.omitCodeBlocks && isElement(parent, `pre`)) return;
   // Can't replace p tag if it contains more than just our target gist element
-  if (options.replaceParentParagraph && isElement(parent, `p`) && parent.children.length > 1) return;
+  if (options.replaceParentParagraph
+    && isElement(parent, `p`)
+    && !elementHasOneValidChild(parent)) return;
 
   const gistUri = (node.children[0] as Text).value;
   const gistElement = await getGistElement(gistUri);

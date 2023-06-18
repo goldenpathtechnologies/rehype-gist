@@ -17,6 +17,17 @@ const config: JestConfigWithTsJest = {
   testEnvironment: `node`,
   rootDir: `./test`,
   testRegex: `\\.(test|e2e-test)\\.ts$`,
+  collectCoverage: true,
+  coverageDirectory: `./coverage/`,
+  coverageProvider: `v8`,
+  coverageThreshold: {
+    global: {
+      branches: 85,
+      functions: 85,
+      lines: 85,
+      statements: -10,
+    },
+  },
 };
 
 export default config;
