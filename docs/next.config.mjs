@@ -12,6 +12,9 @@ const withMDX = mdxConfig({
     ],
     rehypePlugins: [
       rehypeSlug,
+      [rehypeGist, {
+        classNames: `not-prose my-4 border-0`,
+      }],
       [rehypePrettyCode, {
         theme: `one-dark-pro`,
         keepBackground: true,
@@ -19,9 +22,6 @@ const withMDX = mdxConfig({
           // Each line node by default has `class="line"`.
           node.properties.className.push('highlighted');
         },
-      }],
-      [rehypeGist, {
-        classNames: `not-prose my-4`,
       }],
     ],
   },

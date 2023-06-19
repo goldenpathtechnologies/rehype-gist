@@ -10,13 +10,17 @@
     "serve": "serve out"
   },
   "dependencies": {
-    "@types/node": "20.2.5",
-    "@types/react": "18.2.7",
-    "@types/react-dom": "18.2.4",
+    "@fortawesome/fontawesome-svg-core": "^6.4.0",
+    "@fortawesome/free-solid-svg-icons": "^6.4.0",
+    "@fortawesome/react-fontawesome": "^0.2.0",
     "@mdx-js/loader": "^2.3.0",
     "@mdx-js/mdx": "^2.3.0",
     "@mdx-js/react": "^2.3.0",
     "@next/mdx": "^13.4.4",
+    "@types/node": "20.2.5",
+    "@types/react": "18.2.7",
+    "@types/react-dom": "18.2.4",
+    "@wits/next-themes": "^0.2.16",
     "autoprefixer": "10.4.14",
     "next": "13.4.4",
     "postcss": "8.4.24",
@@ -27,11 +31,15 @@
     "rehype-slug": "^5.1.0",
     "remark-frontmatter": "^4.0.1",
     "remark-gfm": "^3.0.1",
+    "shiki": "^0.14.2",
+    "shortid": "^2.2.16",
+    "tagged-classnames": "^1.0.1",
     "tailwindcss": "3.3.2",
     "typescript": "5.0.4"
   },
   "devDependencies": {
     "@tailwindcss/typography": "^0.5.9",
+    "@types/shortid": "^0.0.29",
     "serve": "^14.2.0"
   }
 }

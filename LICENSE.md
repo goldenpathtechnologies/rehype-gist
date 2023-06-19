@@ -1,4 +1,5 @@
 MIT License Copyright (c) 2023 Golden Path Technologies Inc.
+
 MIT License Copyright (c) 2023 Daryl G. Wright (daryl@goldenpath.ca)
 
 Permission is hereby granted, free

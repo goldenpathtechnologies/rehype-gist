@@ -6,14 +6,26 @@ module.exports = {
     `./src/pages/**/*.{js,ts,jsx,tsx,mdx}`,
     `./src/components/**/*.{js,ts,jsx,tsx,mdx}`,
     `./src/app/**/*.{js,ts,jsx,tsx,mdx}`,
+    `./src/mdx-components.tsx`,
   ],
+  darkMode: `class`,
   theme: {
-    extend: {
-      backgroundImage: {
-        'gradient-radial': `radial-gradient(var(--tw-gradient-stops))`,
-        'gradient-conic':
-          `conic-gradient(from 180deg at 50% 50%, var(--tw-gradient-stops))`,
-      },
+    extend: {},
+    container: {
+      center: true,
+    },
+    fontFamily: {
+      body: [`"Open Sans"`, `Helvetica`, `Arial`, `sans-serif`],
+      emoji: [
+        `"Twemoji Mozilla"`,
+        `"Apple Color Emoji"`,
+        `"Segoe UI Emoji"`,
+        `"Segoe UI Symbol"`,
+        `"Noto Color Emoji"`,
+        `"EmojiOne Color"`,
+        `"Android Emoji"`,
+        `sans-serif`,
+      ],
     },
   },
   plugins: [
