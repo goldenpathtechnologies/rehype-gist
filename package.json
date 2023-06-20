@@ -18,7 +18,7 @@
   "files": [
     "dist",
     "README.md",
-    "LICENSE",
+    "LICENSE.md",
     "CHANGELOG.md"
   ],
   "scripts": {
@@ -82,5 +82,44 @@
   },
   "bugs": {
     "url": "https://github.com/goldenpathtechnologies/rehype-gist/issues"
+  },
+  "release": {
+    "branches": [
+      "main"
+    ],
+    "plugins": [
+      "@semantic-release/commit-analyzer",
+      "@semantic-release/release-notes-generator",
+      "@semantic-release/changelog",
+      "@semantic-release/npm",
+      "@semantic-release/exec",
+      [
+        "@semantic-release/git",
+        {
+          "assets": [
+            "package.json",
+            "src/version.ts",
+            "CHANGELOG.md"
+          ],
+          "message": "chore(release): ${nextRelease.version} [skip ci]\n\n${nextRelease.notes}"
+        }
+      ],
+      "@semantic-release/github"
+    ],
+    "preset": "conventionalcommits",
+    "parserOpts": {
+      "noteKeywords": [
+        "BREAKING CHANGE",
+        "BREAKING CHANGES",
+        "BREAKING"
+      ]
+    },
+    "writerOpts": {
+      "commitsSort": [
+        "subject",
+        "scope"
+      ]
+    },
+    "prepareCmd": "npx genversion --semi --double --es6 src/version.ts"
   }
 }
