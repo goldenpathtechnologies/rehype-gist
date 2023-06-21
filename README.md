@@ -2,6 +2,9 @@
 
 A rehype plugin for embedding static GitHub Gists in your HTML and MD/X content.
 
+![GitHub package.json version](https://img.shields.io/github/package-json/v/goldenpathtechnologies/rehype-gist)
+[![Release](https://github.com/goldenpathtechnologies/rehype-gist/actions/workflows/release.yml/badge.svg)](https://github.com/goldenpathtechnologies/rehype-gist/actions/workflows/release.yml)
+[![codecov](https://codecov.io/gh/goldenpathtechnologies/rehype-gist/branch/main/graph/badge.svg?token=fcEjr5yu6q)](https://codecov.io/gh/goldenpathtechnologies/rehype-gist)
 [![Conventional Commits](https://img.shields.io/badge/Conventional%20Commits-1.0.0-yellow.svg)](https://conventionalcommits.org)
 ![GitHub](https://img.shields.io/github/license/goldenpathtechnologies/rehype-gist)
 
