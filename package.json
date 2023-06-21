@@ -27,6 +27,7 @@
     "test": "cross-env NODE_OPTIONS=--experimental-vm-modules jest",
     "test-unit": "cross-env NODE_OPTIONS=--experimental-vm-modules jest --testRegex \"\\.test\\.ts$\"",
     "test-e2e": "cross-env NODE_OPTIONS=--experimental-vm-modules jest --testRegex \"\\.e2e-test\\.ts$\"",
+    "update-snapshot": "cross-env NODE_OPTIONS=--experimental-vm-modules jest --updateSnapshot",
     "clean": "rimraf ./dist",
     "format": "eslint . --fix --ext ts --ext tsx",
     "lint": "eslint . --ext ts --ext tsx",

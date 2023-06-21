@@ -15,10 +15,10 @@ const config: JestConfigWithTsJest = {
   },
   extensionsToTreatAsEsm: [`.ts`],
   testEnvironment: `node`,
-  rootDir: `./test`,
   testRegex: `\\.(test|e2e-test)\\.ts$`,
   collectCoverage: true,
-  coverageDirectory: `./coverage/`,
+  collectCoverageFrom: [`./src/**`],
+  coverageDirectory: `./test/coverage/`,
   coverageProvider: `v8`,
   coverageThreshold: {
     global: {

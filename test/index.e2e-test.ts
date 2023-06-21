@@ -26,7 +26,7 @@ describe(`Integration tests`, () => {
 </html>
       `);
 
-    expect(output).toMatchSnapshot();
+    expect(output.value).toMatchSnapshot();
   });
 
   it(`Transforms a 'code' tag specifying highlights`, async () => {
@@ -46,7 +46,7 @@ describe(`Integration tests`, () => {
 </html>
       `);
 
-    expect(output).toMatchSnapshot();
+    expect(output.value).toMatchSnapshot();
   });
 
   it(`Transforms a 'code' tag specifying removed lines`, async () => {
@@ -66,7 +66,7 @@ describe(`Integration tests`, () => {
 </html>
       `);
 
-    expect(output).toMatchSnapshot();
+    expect(output.value).toMatchSnapshot();
   });
 
   it(`Transforms a 'code' tag specifying highlights and removed lines`, async () => {
@@ -86,7 +86,7 @@ describe(`Integration tests`, () => {
 </html>
       `);
 
-    expect(output).toMatchSnapshot();
+    expect(output.value).toMatchSnapshot();
   });
 
   it(`Transforms code tags generated from inline code in Markdown`, async () => {
@@ -109,7 +109,7 @@ describe(`Integration tests`, () => {
 This project is MIT licensed.
       `);
 
-    expect(output).toMatchSnapshot();
+    expect(output.value).toMatchSnapshot();
   });
 
   it(`Retains default 'replaceParentParagraph' configuration value when omitted from plugin options`, async () => {
